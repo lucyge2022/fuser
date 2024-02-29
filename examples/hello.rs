@@ -1,8 +1,5 @@
 use clap::{crate_version, Arg, ArgAction, Command};
-use fuser::{
-    FileAttr, FileType, Filesystem, MountOption, ReplyAttr, ReplyData, ReplyDirectory, ReplyEntry,
-    Request,
-};
+use fuser::{FileAttr, FileType, Filesystem, MountOption, ReplyAttr, ReplyData, ReplyDirectory, ReplyEntry, Request, ReplyOpen, ReplyWrite};
 use libc::ENOENT;
 use std::ffi::OsStr;
 use std::time::{Duration, UNIX_EPOCH};
@@ -110,6 +107,48 @@ impl Filesystem for HelloFS {
             }
         }
         reply.ok();
+    }
+
+    fn open(
+        &mut self,
+        _req: &Request<'_>,
+        _ino: u64,
+        _flags: i32,
+        reply: ReplyOpen
+    ) {
+        log::info!("LUCY open!");
+        reply.opened(1, _flags as u32);
+    }
+
+    fn write(
+        &mut self,
+        _req: &Request<'_>,
+        _ino: u64,
+        _fh: u64,
+        _offset: i64,
+        _data: &[u8],
+        _write_flags: u32,
+        _flags: i32,
+        _lock_owner: Option<u64>,
+        reply: ReplyWrite,
+    ) {
+        log::info!("LUCY write!");
+        reply.written(_data.len() as u32);
+        //reply.error(ENOSYS);
+    }
+
+    fn mknod(
+        &mut self,
+        _req: &Request<'_>,
+        _parent: u64,
+        _name: &OsStr,
+        _mode: u32,
+        _umask: u32,
+        _rdev: u32,
+        reply: ReplyEntry
+    ) {
+        log::info!("LUCY mknod!");
+        reply.entry(&TTL, &HELLO_TXT_ATTR, 0);
     }
 }
 
